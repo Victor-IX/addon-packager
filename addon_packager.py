@@ -3,11 +3,25 @@ import zipfile
 import os
 import shutil
 
-files_list = "packager_files.json"
+addon_info = "addon_info.json"
+addon_packager_path = "addon-packager/"
 
 
-def update_toml_verison(files_lsit):
-    with open(files_lsit, "r") as f:
+def addon_info_initialization(addon_info):
+    if not os.path.exists(addon_info):
+        addon_info_path = os.path.join(addon_packager_path, addon_info)
+
+        if not os.path.exists(addon_info_path):
+            print(
+                f"Error: {addon_info} not found. Expected path is '{addon_info_path}'."
+            )
+            return
+
+        shutil.copy(addon_info_path, addon_info)
+        print(f"{addon_info} created in the addon repo.")
+
+def update_toml_verison(addon_info):
+    with open(addon_info, "r") as f:
         data = json.load(f)
 
     version = data.get("addon_version")
@@ -24,11 +38,16 @@ def update_toml_verison(files_lsit):
             with open(file, "w") as f:
                 f.writelines(lines)
 
-            print(f"Version updated in '{file}'")
+            print(f"Version updated in {file}")
+            
+        else:
+            current_working_directory = os.getcwd()
+            print(f"Error: No .toml file found in {current_working_directory}. ")
+            print("Check if you are runing the script from the addon repo.")
+            raise SystemExit
 
-
-def pack_files_from_jazon(files_list):
-    with open(files_list, "r") as f:
+def pack_files_from_jazon(addon_info):
+    with open(addon_info, "r") as f:
         data = json.load(f)
 
     addon_name = data.get("addon_name")
@@ -64,5 +83,6 @@ def pack_files_from_jazon(files_list):
     print(f"Addon packed to '{output_zip}'")
 
 
-update_toml_verison(files_list)
-pack_files_from_jazon(files_list)
+addon_info_initialization(addon_info)
+update_toml_verison(addon_info)
+pack_files_from_jazon(addon_info)
