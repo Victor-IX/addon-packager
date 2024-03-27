@@ -28,6 +28,12 @@ def update_toml_verison(addon_info):
 
     for file in data["files"]:
         if file.endswith(".toml"):
+            if not os.path.exists(file):
+                current_working_directory = os.getcwd()
+                print(f"Error: No blender-manifest.toml file found in {current_working_directory}. ")
+                print("Check if you are runing the script from the addon repo.")
+                raise SystemExit
+            
             with open(file, "r") as f:
                 lines = f.readlines()
 
@@ -40,11 +46,6 @@ def update_toml_verison(addon_info):
 
             print(f"Version updated in {file}")
             
-        else:
-            current_working_directory = os.getcwd()
-            print(f"Error: No .toml file found in {current_working_directory}. ")
-            print("Check if you are runing the script from the addon repo.")
-            raise SystemExit
 
 def pack_files_from_jazon(addon_info):
     with open(addon_info, "r") as f:
