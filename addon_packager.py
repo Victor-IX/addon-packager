@@ -39,8 +39,17 @@ def update_toml_verison(addon_info):
 
             for i, line in enumerate(lines):
                 if line.startswith("version = ") or line.startswith("version="):
-                    lines[i] = f'version = "{version}"\n'
-
+                    version_numbers = line.split('=')[1].strip().strip('"').split('.')
+                    major, minor, patch = map(int, version_numbers)
+                    vmajor, vminor, vpatch = map(int, version.split('.'))
+                    if major<=vmajor and minor<=vminor and patch<=vpatch:
+                        lines[i] = f'version = "{version}"\n'
+                    else:
+                        print(f"Error: Version in {file} is higher than addon version.")
+                        print(f"Addon version: {version}")
+                        print(f"Version in {file}: {major}.{minor}.{patch}")
+                        raise SystemExit
+                    
             with open(file, "w") as f:
                 f.writelines(lines)
 
