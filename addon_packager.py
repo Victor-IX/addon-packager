@@ -63,8 +63,8 @@ def update_toml_verison(addon_info):
                     continue
 
                 version_numbers = line.split("=")[1].strip().strip('"').split(".")
-                major, minor, patch = map(int, version_numbers)
-                vmajor, vminor, vpatch = map(int, version.split("."))
+                major, minor, patch = map(int, version_numbers) # version from blender-manifest.toml
+                vmajor, vminor, vpatch = map(int, version.split(".")) # version from addon_info.json
 
                 if major <= vmajor and minor <= vminor and patch <= vpatch:
                     lines[i] = f'version = "{version}"\n'
@@ -87,15 +87,21 @@ def update_toml_verison(addon_info):
                             f"What version do you want to keep? ({bcolors.OKCYAN}{bcolors.BOLD}1{bcolors.ENDC}|{bcolors.OKGREEN}{bcolors.BOLD}2{bcolors.ENDC}): "
                         )
 
+                        # update blender-manifest.toml version
                         if override_value == "1":
                             lines[i] = f'version = "{version}"\n'
                             with open(file, "w") as f:
                                 f.writelines(lines)
                                 print(f"Version updated in {file}")
                             break
+                        # update addon_info.json version
                         elif override_value == "2":
-                            print(f"Version in {file} not updated.")
+                            data["addon_version"] = f"{major}.{minor}.{patch}"
+                            with open(addon_info, "w") as f:
+                                json.dump(data, f, indent=4)
+                                print(f"Version updated in {addon_info}")
                             break
+                        # invalid input
                         else:
                             print(f"{bcolors.FAIL}Invalid input. Please enter 1 or 2 for the version you want to keep.{bcolors.ENDC}")
                             print(
