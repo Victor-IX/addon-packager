@@ -20,6 +20,7 @@ def addon_info_initialization(addon_info):
         shutil.copy(addon_info_path, addon_info)
         print(f"{addon_info} created in the addon repo.")
 
+
 def update_toml_verison(addon_info):
     with open(addon_info, "r") as f:
         data = json.load(f)
@@ -27,34 +28,54 @@ def update_toml_verison(addon_info):
     version = data.get("addon_version")
 
     for file in data["files"]:
-        if file.endswith(".toml"):
-            if not os.path.exists(file):
-                current_working_directory = os.getcwd()
-                print(f"Error: No blender-manifest.toml file found in {current_working_directory}. ")
-                print("Check if you are runing the script from the addon repo.")
-                raise SystemExit
-            
-            with open(file, "r") as f:
-                lines = f.readlines()
+        if not file.endswith(".toml"):
+            continue
+
+        if not os.path.exists(file):
+            current_working_directory = os.getcwd()
+            print(
+                f"Error: No blender-manifest.toml file found in {current_working_directory}. "
+                "Check if you are runing the script from the addon repo."
+            )
+            raise SystemExit
+
+        with open(file, "r") as f:
+            lines = f.readlines()
 
             for i, line in enumerate(lines):
-                if line.startswith("version = ") or line.startswith("version="):
-                    version_numbers = line.split('=')[1].strip().strip('"').split('.')
-                    major, minor, patch = map(int, version_numbers)
-                    vmajor, vminor, vpatch = map(int, version.split('.'))
-                    if major<=vmajor and minor<=vminor and patch<=vpatch:
-                        lines[i] = f'version = "{version}"\n'
-                    else:
-                        print(f"Error: Version in {file} is higher than addon version.")
-                        print(f"Addon version: {version}")
-                        print(f"Version in {file}: {major}.{minor}.{patch}")
-                        raise SystemExit
-                    
-            with open(file, "w") as f:
-                f.writelines(lines)
+                if not line.startswith("version = ") and not line.startswith(
+                    "version="
+                ):
+                    continue
 
-            print(f"Version updated in {file}")
-            
+                version_numbers = line.split("=")[1].strip().strip('"').split(".")
+                major, minor, patch = map(int, version_numbers)
+                vmajor, vminor, vpatch = map(int, version.split("."))
+
+                if major <= vmajor and minor <= vminor and patch <= vpatch:
+                    lines[i] = f'version = "{version}"\n'
+                    with open(file, "w") as f:
+                        f.writelines(lines)
+                        print(f"Version updated in {file}")
+                else:
+                    print(
+                        f"Warrning: Version in {file} is higher than the version in the {addon_info}"
+                    )
+                    print(f"{addon_info} version: {version}")
+                    print(f"{file} version: {major}.{minor}.{patch}")
+                    override_value = input(
+                        "Do you want to override the version in the file? (y/n): "
+                    )
+
+                    if override_value.lower() == "y":
+                        lines[i] = f'version = "{version}"\n'
+                        with open(file, "w") as f:
+                            f.writelines(lines)
+                            print(f"Version updated in {file}")
+                    else:
+                        print(f"Version in {file} not updated.")
+                        break
+
 
 def pack_files_from_jazon(addon_info):
     with open(addon_info, "r") as f:
