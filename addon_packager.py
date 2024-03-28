@@ -7,13 +7,25 @@ addon_info = "addon_info.json"
 addon_packager_path = "addon-packager/"
 
 
+class bcolors:
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
+
 def addon_info_initialization(addon_info):
     if not os.path.exists(addon_info):
         addon_info_path = os.path.join(addon_packager_path, addon_info)
 
         if not os.path.exists(addon_info_path):
             print(
-                f"Error: {addon_info} not found. Expected path is '{addon_info_path}'."
+                f"{bcolors.FAIL}Error: {addon_info} not found. Expected path is {addon_info_path}.{bcolors.ENDC}"
             )
             return
 
@@ -34,8 +46,10 @@ def update_toml_verison(addon_info):
         if not os.path.exists(file):
             current_working_directory = os.getcwd()
             print(
-                f"Error: No blender-manifest.toml file found in {current_working_directory}. "
-                "Check if you are runing the script from the addon repo."
+                f"{bcolors.FAIL}Error: No blender-manifest.toml file found in {current_working_directory}.{bcolors.ENDC}"
+            )
+            print(
+                f"{bcolors.FAIL}Make sure you are runing the script from the addon repo.{bcolors.ENDC}"
             )
             raise SystemExit
 
@@ -59,22 +73,37 @@ def update_toml_verison(addon_info):
                         print(f"Version updated in {file}")
                 else:
                     print(
-                        f"Warrning: Version in {file} is higher than the version in the {addon_info}"
+                        f"{bcolors.WARNING}Warrning: Version in {file} is higher than the version in the {addon_info}.{bcolors.ENDC}"
                     )
-                    print(f"{addon_info} version: {version}")
-                    print(f"{file} version: {major}.{minor}.{patch}")
-                    override_value = input(
-                        "Do you want to override the version in the file? (y/n): "
+                    print(
+                        f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
                     )
+                    print(
+                        f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
+                    )
+                    
+                    while True:
+                        override_value = input(
+                            f"What version do you want to keep? ({bcolors.OKCYAN}{bcolors.BOLD}1{bcolors.ENDC}|{bcolors.OKGREEN}{bcolors.BOLD}2{bcolors.ENDC}): "
+                        )
 
-                    if override_value.lower() == "y":
-                        lines[i] = f'version = "{version}"\n'
-                        with open(file, "w") as f:
-                            f.writelines(lines)
-                            print(f"Version updated in {file}")
-                    else:
-                        print(f"Version in {file} not updated.")
-                        break
+                        if override_value == "1":
+                            lines[i] = f'version = "{version}"\n'
+                            with open(file, "w") as f:
+                                f.writelines(lines)
+                                print(f"Version updated in {file}")
+                            break
+                        elif override_value == "2":
+                            print(f"Version in {file} not updated.")
+                            break
+                        else:
+                            print(f"{bcolors.FAIL}Invalid input. Please enter 1 or 2 for the version you want to keep.{bcolors.ENDC}")
+                            print(
+                                f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
+                            )
+                            print(
+                                    f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
+                            )
 
 
 def pack_files_from_jazon(addon_info):
