@@ -1,7 +1,7 @@
 import json
-import zipfile
 import os
 import shutil
+import zipfile
 
 addon_info = "addon_info.json"
 addon_packager_path = "addon-packager/"
@@ -33,6 +33,46 @@ def addon_info_initialization(addon_info):
         print(f"{addon_info} created in the addon repo.")
 
 
+def get_blender_version(file):
+    with open(file, "r") as f:
+        lines = f.readlines()
+
+    for line in lines:
+        if line.startswith("version = ") or line.startswith("version="):
+            version_numbers = line.split("=")[1].strip().strip('"').split(".")
+            return tuple(map(int, version_numbers))
+    return None
+
+
+def ask_for_new_version(version):
+    new_version = input("Enter new version (Major.Minor.Patch), press enter to keep the current version: ")
+    if new_version == "":
+        return version
+    return new_version
+
+
+def update_version_in_toml(file, new_version):
+    with open(file, "r") as f:
+        lines = f.readlines()
+
+    for i, line in enumerate(lines):
+        if line.startswith("version = ") or line.startswith("version="):
+            lines[i] = f'version = "{new_version}"\n'
+
+    with open(file, "w") as f:
+        f.writelines(lines)
+
+
+def update_addon_info_json(addon_info, new_version):
+    with open(addon_info, "r") as f:
+        data = json.load(f)
+
+    data["addon_version"] = new_version
+
+    with open(addon_info, "w") as f:
+        json.dump(data, f, indent=4)
+
+
 def update_toml_version(addon_info):
     with open(addon_info, "r") as f:
         data = json.load(f)
@@ -53,49 +93,61 @@ def update_toml_version(addon_info):
             )
             raise SystemExit
 
-        with open(file, "r") as f:
-            lines = f.readlines()
+        current_version = get_blender_version(file)
 
-            for i, line in enumerate(lines):
-                if not line.startswith("version = ") and not line.startswith(
-                    "version="
-                ):
-                    continue
+        if current_version is None:
+            print(f"{bcolors.FAIL}Error: No version found in {file}.{bcolors.ENDC}")
+            continue
 
-                version_numbers = line.split("=")[1].strip().strip('"').split(".")
-                # version from blender-manifest.toml
-                major, minor, patch = map(int, version_numbers)
-                # version from addon_info.json
-                vmajor, vminor, vpatch = map(int, version.split("."))
+        vmajor, vminor, vpatch = map(int, version.split("."))
+        major, minor, patch = current_version
 
-                # check if the version in the addon_info.json is the same as the version in the blender-manifest.toml
-                # if it is the same, ask the user to enter a new version
-                if major == vmajor and minor == vminor and patch == vpatch:
-                    print(f"Current addon version is: {version}")
-                    new_version = input("Enter new version (Major.Minor.Patch), press enter to keep the current version: ")
+        if (major, minor, patch) == (vmajor, vminor, vpatch):
+            print(f"Current addon version is: {version}")
+            new_version = ask_for_new_version(version)
+            update_version_in_toml(file, new_version)
+            update_addon_info_json(addon_info, new_version)
+        elif (major, minor, patch) < (vmajor, vminor, vpatch):
+            update_version_in_toml(file, version)
+            print(f"Version updated in {file}")
+        else:
+            print(
+                f"{bcolors.WARNING}Warning: Version in {file} is higher than the version in the {addon_info}.{bcolors.ENDC}"
+            )
+            print(
+                f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
+            )
+            print(
+                f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
+            )
+            print(
+                f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}"
+            )
 
-                    if new_version == "":
-                        break
+            while True:
+                override_value = input(
+                    f"What version do you want to keep? ({bcolors.OKCYAN}{bcolors.BOLD}1{bcolors.ENDC}|{bcolors.OKGREEN}{bcolors.BOLD}2{bcolors.ENDC}|{bcolors.WARNING}{bcolors.BOLD}3{bcolors.ENDC}): "
+                )
 
-                    lines[i] = f'version = "{new_version}"\n'
-
-                    with open(file, "w") as f:
-                        f.writelines(lines)
-                        data["addon_version"] = f"{new_version}"
-
-                    with open(addon_info, "w") as f:
-                        json.dump(data, f, indent=4)
-
+                if override_value == "1":
+                    update_version_in_toml(file, version)
                     break
-
-                if major <= vmajor and minor <= vminor and patch <= vpatch:
-                    lines[i] = f'version = "{version}"\n'
-                    with open(file, "w") as f:
-                        f.writelines(lines)
-                        print(f"Version updated in {file}")
+                elif override_value == "2":
+                    update_addon_info_json(addon_info, f"{major}.{minor}.{patch}")
+                    break
+                elif override_value == "3":
+                    new_version = input("Enter new version (Major.Minor.Patch): ")
+                    if new_version == "":
+                        print(
+                            f"{bcolors.FAIL}Invalid input. Please enter a version.{bcolors.ENDC}"
+                        )
+                    else:
+                        update_version_in_toml(file, new_version)
+                        update_addon_info_json(addon_info, new_version)
+                        break
                 else:
                     print(
-                        f"{bcolors.WARNING}Warning: Version in {file} is higher than the version in the {addon_info}.{bcolors.ENDC}"
+                        f"{bcolors.FAIL}Invalid input. Please enter 1, 2, or 3 for the version you want to keep.{bcolors.ENDC}"
                     )
                     print(
                         f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
@@ -106,49 +158,6 @@ def update_toml_version(addon_info):
                     print(
                         f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}"
                     )
-
-                    while True:
-                        override_value = input(
-                            f"What version do you want to keep? ({bcolors.OKCYAN}{bcolors.BOLD}1{bcolors.ENDC}|{bcolors.OKGREEN}{bcolors.BOLD}2{bcolors.ENDC}|{bcolors.WARNING}{bcolors.BOLD}3{bcolors.ENDC}): "
-                        )
-
-                        if override_value == "1":
-                            lines[i] = f'version = "{version}"\n'
-                            with open(file, "w") as f:
-                                f.writelines(lines)
-                            break
-                        elif override_value == "2":
-                            data["addon_version"] = f"{major}.{minor}.{patch}"
-                            with open(addon_info, "w") as f:
-                                json.dump(data, f, indent=4)
-                            break
-                        elif override_value == "3":
-                            new_version = input("Enter new version (Major.Minor.Patch): ")
-                            if new_version == "":
-                                print(
-                                    f"{bcolors.FAIL}Invalid input. Please enter a version.{bcolors.ENDC}"
-                                )
-                            else:
-                                lines[i] = f'version = "{new_version}"\n'
-                                with open(file, "w") as f:
-                                    f.writelines(lines)
-                                data["addon_version"] = new_version
-                                with open(addon_info, "w") as f:
-                                    json.dump(data, f, indent=4)
-                                break
-                        else:
-                            print(
-                                f"{bcolors.FAIL}Invalid input. Please enter 1, 2, or 3 for the version you want to keep.{bcolors.ENDC}"
-                            )
-                            print(
-                                f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
-                            )
-                            print(
-                                f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
-                            )
-                            print(
-                                f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}"
-                            )
 
 
 def pack_files_from_json(addon_info):
