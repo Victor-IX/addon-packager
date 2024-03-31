@@ -114,15 +114,7 @@ def update_toml_version(addon_info):
             print(
                 f"{bcolors.WARNING}Warning: Version in {file} is higher than the version in the {addon_info}.{bcolors.ENDC}"
             )
-            print(
-                f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
-            )
-            print(
-                f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
-            )
-            print(
-                f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}"
-            )
+            version_choise(version, file, major, minor, patch)
 
             while True:
                 override_value = input(
@@ -149,16 +141,18 @@ def update_toml_version(addon_info):
                     print(
                         f"{bcolors.FAIL}Invalid input. Please enter 1, 2, or 3 for the version you want to keep.{bcolors.ENDC}"
                     )
-                    print(
-                        f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
-                    )
-                    print(
-                        f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
-                    )
-                    print(
-                        f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}"
-                    )
+                    version_choise(version, file, major, minor, patch)
 
+def version_choise(version, file, major, minor, patch):
+    print(
+        f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
+    )
+    print(
+        f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
+    )
+    print(
+        f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}"
+    )
 
 def pack_files_from_json(addon_info):
     with open(addon_info, "r") as f:
