@@ -33,7 +33,7 @@ def addon_info_initialization(addon_info):
         print(f"{addon_info} created in the addon repo.")
 
 
-def update_toml_verison(addon_info):
+def update_toml_version(addon_info):
     with open(addon_info, "r") as f:
         data = json.load(f)
 
@@ -49,7 +49,7 @@ def update_toml_verison(addon_info):
                 f"{bcolors.FAIL}Error: No blender-manifest.toml file found in {current_working_directory}.{bcolors.ENDC}"
             )
             print(
-                f"{bcolors.FAIL}Make sure you are runing the script from the addon repo.{bcolors.ENDC}"
+                f"{bcolors.FAIL}Make sure you are running the script from the addon repo.{bcolors.ENDC}"
             )
             raise SystemExit
 
@@ -71,12 +71,12 @@ def update_toml_verison(addon_info):
                 # check if the version in the addon_info.json is the same as the version in the blender-manifest.toml
                 # if it is the same, ask the user to enter a new version
                 if major == vmajor and minor == vminor and patch == vpatch:
-                    print(f"Current addon verison is: {version}")
-                    new_version = input("Enter new version (Major.Minor.Path), press enter keep the current verison: ")
-                    
+                    print(f"Current addon version is: {version}")
+                    new_version = input("Enter new version (Major.Minor.Patch), press enter to keep the current version: ")
+
                     if new_version == "":
                         break
-                    
+
                     lines[i] = f'version = "{new_version}"\n'
 
                     with open(file, "w") as f:
@@ -95,7 +95,7 @@ def update_toml_verison(addon_info):
                         print(f"Version updated in {file}")
                 else:
                     print(
-                        f"{bcolors.WARNING}Warrning: Version in {file} is higher than the version in the {addon_info}.{bcolors.ENDC}"
+                        f"{bcolors.WARNING}Warning: Version in {file} is higher than the version in the {addon_info}.{bcolors.ENDC}"
                     )
                     print(
                         f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
@@ -112,21 +112,18 @@ def update_toml_verison(addon_info):
                             f"What version do you want to keep? ({bcolors.OKCYAN}{bcolors.BOLD}1{bcolors.ENDC}|{bcolors.OKGREEN}{bcolors.BOLD}2{bcolors.ENDC}|{bcolors.WARNING}{bcolors.BOLD}3{bcolors.ENDC}): "
                         )
 
-                        # update blender-manifest.toml version
                         if override_value == "1":
                             lines[i] = f'version = "{version}"\n'
                             with open(file, "w") as f:
                                 f.writelines(lines)
                             break
-                        # update addon_info.json version
                         elif override_value == "2":
                             data["addon_version"] = f"{major}.{minor}.{patch}"
                             with open(addon_info, "w") as f:
                                 json.dump(data, f, indent=4)
                             break
-                        # custom version
                         elif override_value == "3":
-                            new_version = input("Enter new version (Major.Minor.Path): ")
+                            new_version = input("Enter new version (Major.Minor.Patch): ")
                             if new_version == "":
                                 print(
                                     f"{bcolors.FAIL}Invalid input. Please enter a version.{bcolors.ENDC}"
@@ -139,10 +136,9 @@ def update_toml_verison(addon_info):
                                 with open(addon_info, "w") as f:
                                     json.dump(data, f, indent=4)
                                 break
-                        # invalid input
                         else:
                             print(
-                                f"{bcolors.FAIL}Invalid input. Please enter 1 or 2 for the version you want to keep.{bcolors.ENDC}"
+                                f"{bcolors.FAIL}Invalid input. Please enter 1, 2, or 3 for the version you want to keep.{bcolors.ENDC}"
                             )
                             print(
                                 f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
@@ -155,7 +151,7 @@ def update_toml_verison(addon_info):
                             )
 
 
-def pack_files_from_jazon(addon_info):
+def pack_files_from_json(addon_info):
     with open(addon_info, "r") as f:
         data = json.load(f)
 
@@ -177,7 +173,7 @@ def pack_files_from_jazon(addon_info):
 
     if os.path.exists(output_zip):
         os.remove(output_zip)
-        print(f"Zip file '{output_zip}' have been override.")
+        print(f"Zip file '{output_zip}' has been overridden.")
 
     with zipfile.ZipFile(output_zip, "w") as zipf:
         for root, _, files in os.walk(addon_name):
@@ -193,5 +189,5 @@ def pack_files_from_jazon(addon_info):
 
 
 addon_info_initialization(addon_info)
-update_toml_verison(addon_info)
-pack_files_from_jazon(addon_info)
+update_toml_version(addon_info)
+pack_files_from_json(addon_info)
