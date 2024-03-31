@@ -45,7 +45,9 @@ def get_blender_version(file):
 
 
 def ask_for_new_version(version):
-    new_version = input("Enter new version (Major.Minor.Patch), press enter to keep the current version: ")
+    new_version = input(
+        "Enter new version (Major.Minor.Patch), press enter to keep the current version: "
+    )
     if new_version == "":
         return version
     return new_version
@@ -143,6 +145,7 @@ def update_toml_version(addon_info):
                     )
                     version_choise(version, file, major, minor, patch)
 
+
 def version_choise(version, file, major, minor, patch):
     print(
         f"{bcolors.OKCYAN}    1. {addon_info} version: {bcolors.BOLD}{version}{bcolors.ENDC}"
@@ -150,9 +153,8 @@ def version_choise(version, file, major, minor, patch):
     print(
         f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
     )
-    print(
-        f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}"
-    )
+    print(f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}")
+
 
 def pack_files_from_json(addon_info):
     with open(addon_info, "r") as f:
