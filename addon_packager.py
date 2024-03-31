@@ -72,9 +72,9 @@ def update_toml_verison(addon_info):
                 # if it is the same, ask the user to enter a new version
                 if major == vmajor and minor == vminor and patch == vpatch:
                     print(f"Current addon verison is: {version}")
-                    new_version = input("Enter new version (Major.Minor.Path), enter 0 to keep the current verison: ")
+                    new_version = input("Enter new version (Major.Minor.Path), press enter keep the current verison: ")
                     
-                    if new_version == "0":
+                    if new_version == "":
                         break
                     
                     lines[i] = f'version = "{new_version}"\n'
@@ -103,10 +103,13 @@ def update_toml_verison(addon_info):
                     print(
                         f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
                     )
+                    print(
+                        f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}"
+                    )
 
                     while True:
                         override_value = input(
-                            f"What version do you want to keep? ({bcolors.OKCYAN}{bcolors.BOLD}1{bcolors.ENDC}|{bcolors.OKGREEN}{bcolors.BOLD}2{bcolors.ENDC}): "
+                            f"What version do you want to keep? ({bcolors.OKCYAN}{bcolors.BOLD}1{bcolors.ENDC}|{bcolors.OKGREEN}{bcolors.BOLD}2{bcolors.ENDC}|{bcolors.WARNING}{bcolors.BOLD}3{bcolors.ENDC}): "
                         )
 
                         # update blender-manifest.toml version
@@ -121,6 +124,21 @@ def update_toml_verison(addon_info):
                             with open(addon_info, "w") as f:
                                 json.dump(data, f, indent=4)
                             break
+                        # custom version
+                        elif override_value == "3":
+                            new_version = input("Enter new version (Major.Minor.Path): ")
+                            if new_version == "":
+                                print(
+                                    f"{bcolors.FAIL}Invalid input. Please enter a version.{bcolors.ENDC}"
+                                )
+                            else:
+                                lines[i] = f'version = "{new_version}"\n'
+                                with open(file, "w") as f:
+                                    f.writelines(lines)
+                                data["addon_version"] = new_version
+                                with open(addon_info, "w") as f:
+                                    json.dump(data, f, indent=4)
+                                break
                         # invalid input
                         else:
                             print(
@@ -131,6 +149,9 @@ def update_toml_verison(addon_info):
                             )
                             print(
                                 f"{bcolors.OKGREEN}    2. {file} version: {bcolors.BOLD}{major}.{minor}.{patch}{bcolors.ENDC}"
+                            )
+                            print(
+                                f"{bcolors.WARNING}    3. {bcolors.BOLD}Custom version{bcolors.ENDC}"
                             )
 
 
