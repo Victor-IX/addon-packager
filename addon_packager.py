@@ -162,7 +162,7 @@ def pack_files_from_json(addon_info):
 
     addon_name = data.get("addon_name")
     version = data.get("addon_version")
-    output_zip = f"{addon_name}-{version}.zip"
+    output_zip = f"dist/{addon_name}-{version}.zip"
 
     if os.path.exists(addon_name):
         print(f"Error: Folder '{addon_name}' already exists.")
@@ -175,6 +175,8 @@ def pack_files_from_json(addon_info):
             shutil.copy(file, os.path.join(addon_name, os.path.basename(file)))
         else:
             print(f"File not found: {file}")
+
+    os.makedirs(os.path.dirname(output_zip), exist_ok=True)
 
     if os.path.exists(output_zip):
         os.remove(output_zip)
