@@ -1,5 +1,7 @@
 # Addon Packager
 
+# This tool is not useful anymore as Extensions can be packaged with Blender CLI
+
 This Python script automates the process of packaging Blender addons by updating version information in TOML files and creating a zip package with only the addon files
 
 ## Prerequisites
